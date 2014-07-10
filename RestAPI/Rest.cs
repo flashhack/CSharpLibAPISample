@@ -24,7 +24,8 @@ namespace RestApi
         /// Server to communicate with
         /// </summary>
         /// Change to https://api-fxpractice.oanda.com/ for practice account
-        static string s_apiServer = "http://api-sandbox.oanda.com/";
+        //static string s_apiServer = "http://api-sandbox.oanda.com/";
+        static string s_apiServer = "https://api-fxpractice.oanda.com/";
         
         /// <summary>
         /// Gets the list of accounts for a specific user
@@ -252,6 +253,8 @@ namespace RestApi
             request.Headers.Add("Authorization", "Bearer " + accessToken);
             */
 
+            var accessToken = "fb19a8254cfb53ee4fa2b20fe99a7cfb-f714c073d1c84dd0f8c8d5926addb693";
+            request.Headers.Add("Authorization", "Bearer " + accessToken);
             request.Method = method;
             if (method == "POST")
             {
@@ -265,6 +268,7 @@ namespace RestApi
                 }
             }
 
+            
             using (var response = request.GetResponse())
             {
                 using (var reader = new StreamReader(response.GetResponseStream()))
@@ -274,6 +278,41 @@ namespace RestApi
                     return responseString;
                 }
             }
+        }
+
+        public static void StreamRate(string Instruments)
+        {
+            var request = WebRequest.CreateHttp("https://stream-fxpractice.oanda.com/v1/prices?accountId=722727&instruments="+Instruments);
+            var accessToken = "fb19a8254cfb53ee4fa2b20fe99a7cfb-f714c073d1c84dd0f8c8d5926addb693";
+            request.Headers.Add("Authorization", "Bearer " + accessToken);
+            request.Method = "GET";
+            using (var response = request.GetResponse())
+            {
+                using (var reader = new StreamReader(response.GetResponseStream()))
+                {
+                    string line;
+                    var serializer = new JavaScriptSerializer();
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        if (line.Contains("instrument"))
+                        {
+                            var price = serializer.Deserialize<Price>(line);
+                            Console.WriteLine("Instrument:{0} Date:{1:MM/dd/yyy hh:mm:ss.fff} Bid:{2} Ask:{3}",price.instrument,price.time,price.bid,price.ask);    
+                        }
+                        
+                    }
+                }
+            }
+        }
+
+        static void Main(string[] args)
+        {
+            Instrument a = new Instrument();
+            a.instrument = "EUR_USD";
+            //Rest.GetRates(new List<Instrument> { a });
+            //Rest.StreamRate("EUR_USD,USD_JPY,GBP_USD,AUD_USD,NZD_USD,USD_CHF,USD_CAD");
+            Rest.GetPositions(722727);
+            Console.ReadKey();
         }
     }
 }
